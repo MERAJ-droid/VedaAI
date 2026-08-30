@@ -12,7 +12,7 @@ import type { PageImage } from '@/lib/types';
  */
 export async function pdfToImages(
   pdfBuffer: Buffer,
-  dpi: number = Number(process.env.OCR_TARGET_DPI || 200)
+  dpi: number = Number(process.env.OCR_TARGET_DPI || 150)
 ): Promise<PageImage[]> {
   const pages: PageImage[] = [];
 
