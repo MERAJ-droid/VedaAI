@@ -58,23 +58,38 @@ function ScoreBadge({ score, maxScore }: { score: number | null; maxScore: numbe
   );
 }
 
+// ─── Helpers for question number display ─────────────────────────────────────
+
+/** Main circle label: parent number for sub-questions, stripped number for top-level */
+function getMainBadgeLabel(question: Question): string {
+  if (question.parentNumber) return String(question.parentNumber);
+  return question.number.replace(/\.$/, '').trim();
+}
+
+/** Sub-part pill label: e.g. "1(i)" with parent "1" → "i." */
+function getSubpartLabel(question: Question): string | null {
+  if (!question.parentNumber) return null;
+  const raw = question.number
+    .replace(question.parentNumber, '')
+    .replace(/[()]/g, '')
+    .trim();
+  return raw ? `${raw}.` : null;
+}
+
 // ─── Question accordion item ─────────────────────────────────────────────────
 function QuestionItem({
   question,
-  displayIndex,
   gradingResult,
   isExpanded,
   onClick,
 }: {
   question: Question;
-  displayIndex: number;
   gradingResult?: GradingResult;
   isExpanded: boolean;
   onClick: () => void;
 }) {
-  const subpart = question.parentNumber
-    ? question.number.replace(question.parentNumber, '').trim()
-    : null;
+  const mainLabel = getMainBadgeLabel(question);
+  const subLabel = getSubpartLabel(question);
 
   return (
     <div
@@ -85,9 +100,10 @@ function QuestionItem({
       }`}
       onClick={onClick}
     >
-      {/* Top Header Row: Number Badge (+ subpart) on Left, Score Badge + Chevron on Right */}
+      {/* Header row */}
       <div className="flex items-center justify-between w-full gap-2">
         <div className="flex items-center gap-2 min-w-0">
+          {/* Dark circle — main/parent question number */}
           <div
             className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold ring-[3px] ${
               isExpanded
@@ -95,10 +111,16 @@ function QuestionItem({
                 : 'bg-gray-700 text-white ring-gray-200'
             }`}
           >
-            {displayIndex}
+            {mainLabel}
           </div>
-          {subpart && (
-            <span className="text-xs sm:text-sm font-bold text-gray-700">{subpart}</span>
+          {/* Light circle — sub-part label (e.g. "i.", "ii.", "a.") */}
+          {subLabel && (
+            <div
+              className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-black"
+              style={{ backgroundColor: '#F6F6F6' }}
+            >
+              {subLabel}
+            </div>
           )}
         </div>
 
@@ -116,12 +138,12 @@ function QuestionItem({
         </div>
       </div>
 
-      {/* Question Text Row: Full width below header row */}
+      {/* Question text */}
       <p className="w-full text-xs sm:text-sm font-medium text-gray-800 leading-snug break-words mt-2.5">
         {question.text}
       </p>
 
-      {/* Expanded: AI Feedback */}
+      {/* AI Feedback (expanded) */}
       {isExpanded && gradingResult?.aiFeedback && (
         <div className="mt-3 rounded-xl bg-gray-50 p-3 text-xs space-y-1">
           <p className="font-bold text-gray-700">AI Feedback</p>
@@ -263,16 +285,14 @@ export default function ResultsPage() {
 
       {/* Scrollable question list */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 w-full min-w-0">
-        {/* ── Answered questions only (100% opacity solid white cards) ──────── */}
+        {/* ── Answered questions (solid white cards) ──────── */}
         {answeredQuestions.map((q) => {
-          const originalIndex = result.questions.findIndex(rq => rq.id === q.id);
           const gradingResult = result.gradingResults?.find(g => g.questionId === q.id);
           const isExp = allExpanded || expandedQuestionId === q.id;
           return (
             <QuestionItem
               key={q.id}
               question={q}
-              displayIndex={originalIndex + 1}
               gradingResult={gradingResult}
               isExpanded={isExp}
               onClick={() => handleQuestionClick(q.id)}
@@ -280,16 +300,27 @@ export default function ResultsPage() {
           );
         })}
 
-        {/* ── Unanswered questions (100% opacity solid white cards) ─────────── */}
+        {/* ── Unanswered questions ─────────── */}
         {result.unansweredQuestions.length > 0 && (
           <div className="pt-2 w-full min-w-0">
             <p className="text-xs font-semibold text-gray-500 px-1 pb-1">Unanswered</p>
             {result.unansweredQuestions.map((q) => {
-              const originalIndex = result.questions.findIndex(rq => rq.id === q.id);
+              const mainLabel = getMainBadgeLabel(q);
+              const subLabel = getSubpartLabel(q);
               return (
                 <div key={q.id} className="flex items-center gap-3 p-3 rounded-2xl bg-white mb-2 shadow-xs border border-gray-100/80 opacity-75 w-full min-w-0">
-                  <div className="shrink-0 w-7 h-7 rounded-full bg-gray-300 ring-[3px] ring-gray-200 flex items-center justify-center text-xs font-extrabold text-white">
-                    {originalIndex + 1}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="shrink-0 w-7 h-7 rounded-full bg-gray-300 ring-[3px] ring-gray-200 flex items-center justify-center text-xs font-extrabold text-white">
+                      {mainLabel}
+                    </div>
+                    {subLabel && (
+                      <div
+                        className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-black"
+                        style={{ backgroundColor: '#F6F6F6' }}
+                      >
+                        {subLabel}
+                      </div>
+                    )}
                   </div>
                   <p className="flex-1 text-xs sm:text-sm text-gray-600 leading-snug break-words min-w-0">{q.text}</p>
                   <span className="text-xs font-bold text-red-500 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shrink-0">
@@ -300,6 +331,7 @@ export default function ResultsPage() {
             })}
           </div>
         )}
+
 
         {/* ── Unmatched answers (100% opacity solid white cards) ────────────── */}
         {result.unmatchedAnswers.length > 0 && (
