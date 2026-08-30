@@ -26,6 +26,7 @@ function PageWithHighlights({
   width,
   selectedAnswer,
   selectedQuestionLabel,
+  metadata,
   pageRef,
 }: {
   pageNumber: number;
@@ -33,6 +34,7 @@ function PageWithHighlights({
   width: number | undefined;
   selectedAnswer: Answer | null;
   selectedQuestionLabel: string | null;
+  metadata?: PageMetadata;
   pageRef: (el: HTMLDivElement | null) => void;
 }) {
   const [renderedSize, setRenderedSize] = useState<{ width: number; height: number } | null>(null);
@@ -49,6 +51,7 @@ function PageWithHighlights({
         padding: 0,
         border: 'none',
         width: width ? `${width}px` : '100%',
+        ...(metadata && metadata.width && metadata.height ? { aspectRatio: `${metadata.width} / ${metadata.height}` } : {}),
       }}
       className="bg-white"
     >
@@ -174,7 +177,7 @@ export function AnswerSheetViewer({
 
     isProgrammaticScrollRef.current = true;
 
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       const containerRect = scrollContainer.getBoundingClientRect();
       const pageRect = pageEl.getBoundingClientRect();
       const highlightTopInViewport = pageRect.top + region.normalized.y * pageEl.offsetHeight;
@@ -188,7 +191,7 @@ export function AnswerSheetViewer({
       setTimeout(() => {
         isProgrammaticScrollRef.current = false;
       }, 500);
-    });
+    }, 150);
   }, [selectedAnswer, onCurrentPageChange]);
 
   // Scroll to page when header page buttons change currentPage
@@ -280,6 +283,7 @@ export function AnswerSheetViewer({
             width={pageWidth}
             selectedAnswer={selectedAnswer}
             selectedQuestionLabel={selectedQuestionLabel}
+            metadata={pageMetadata[i]}
             pageRef={(el) => { pageRefs.current[i] = el; }}
           />
         ))}
