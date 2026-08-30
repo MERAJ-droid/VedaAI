@@ -65,10 +65,17 @@ export interface ProcessedPage {
 // Application Layer Types
 // ============================================================
 
+export interface MCQOption {
+  label: string;   // 'A', 'B', 'C', or 'D'
+  text: string;    // Option body text
+}
+
 export interface Question {
   id: string;                  // e.g., "11a", "11b", "12"
   number: string;              // Original label: "11 (a)"
-  text: string;                // Full question text
+  text: string;                // Question stem (for MCQ: stem only, no options)
+  type?: 'mcq' | 'subjective' | 'short_answer'; // undefined → treat as subjective
+  options?: MCQOption[];       // Populated only when type === 'mcq'
   marks?: number;              // Max marks if printed on paper
   parentNumber?: string;       // "11" for sub-parts
   pageIndex: number;           // Source page in question paper
@@ -86,6 +93,7 @@ export interface Answer {
   studentLabel: string | null;       // What the student wrote as question number
   rawStudentLabel: string | null;    // Raw OCR text before normalization
   text: string;                      // Full extracted answer text
+  selectedOption?: string;           // For MCQ: 'A', 'B', 'C', or 'D' (uppercase)
   regions: AnswerRegion[];           // Can span multiple pages
   ocrConfidence: number;             // Weighted average OCR confidence (weighted by line char count)
   segmentationConfidence: number;    // How confidently the app believes these blocks form one answer
@@ -104,6 +112,7 @@ export type MappingReason =
   | 'fuzzy_label'
   | 'semantic_match'
   | 'contextual_match'
+  | 'parent_to_child'
   | 'llm_reasoning';
 
 export interface UnmatchedAnswer {

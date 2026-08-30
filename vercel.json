@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "functions": {
+    "src/app/api/process/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/debug/document/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
+
