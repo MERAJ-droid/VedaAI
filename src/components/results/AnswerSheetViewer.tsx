@@ -181,7 +181,7 @@ export function AnswerSheetViewer({
       const containerRect = scrollContainer.getBoundingClientRect();
       const pageRect = pageEl.getBoundingClientRect();
       const highlightTopInViewport = pageRect.top + region.normalized.y * pageEl.offsetHeight;
-      const targetScrollTop = scrollContainer.scrollTop + (highlightTopInViewport - containerRect.top) - 60;
+      const targetScrollTop = scrollContainer.scrollTop + (highlightTopInViewport - containerRect.top) - 16;
       scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
 
       if (onCurrentPageChange) {
@@ -288,6 +288,7 @@ export function AnswerSheetViewer({
           />
         ))}
       </Document>
+      <div className="h-[80vh] w-full pointer-events-none" />
     </div>
   );
 }
