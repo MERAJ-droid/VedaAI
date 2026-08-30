@@ -374,9 +374,9 @@ class OCRSpaceProvider implements DocumentOCRProvider {
         `[OCRSpace] Page ${img.pageIndex + 1}: ${page.lines.length} lines, ${page.words.length} words`
       );
 
-      // Delay between pages to stay within rate limits (5s for Engine 3 to bypass Render IP block)
+      // Delay between pages to stay within rate limits (1.5s for Engine 3, 0.5s for Engine 2)
       if (i < images.length - 1) {
-        await new Promise(r => setTimeout(r, this.engine === 3 ? 5000 : 2000));
+        await new Promise(r => setTimeout(r, this.engine === 3 ? 1500 : 500));
       }
     }
 

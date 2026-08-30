@@ -26,7 +26,6 @@ function PageWithHighlights({
   width,
   selectedAnswer,
   selectedQuestionLabel,
-  metadata,
   pageRef,
 }: {
   pageNumber: number;
@@ -34,7 +33,6 @@ function PageWithHighlights({
   width: number | undefined;
   selectedAnswer: Answer | null;
   selectedQuestionLabel: string | null;
-  metadata?: PageMetadata;
   pageRef: (el: HTMLDivElement | null) => void;
 }) {
   const [renderedSize, setRenderedSize] = useState<{ width: number; height: number } | null>(null);
@@ -51,7 +49,6 @@ function PageWithHighlights({
         padding: 0,
         border: 'none',
         width: width ? `${width}px` : '100%',
-        ...(metadata && metadata.width && metadata.height ? { aspectRatio: `${metadata.width} / ${metadata.height}` } : {}),
       }}
       className="bg-white"
     >
@@ -177,12 +174,12 @@ export function AnswerSheetViewer({
 
     isProgrammaticScrollRef.current = true;
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       const containerRect = scrollContainer.getBoundingClientRect();
       const pageRect = pageEl.getBoundingClientRect();
       const highlightTopInViewport = pageRect.top + region.normalized.y * pageEl.offsetHeight;
-      const targetScrollTop = scrollContainer.scrollTop + (highlightTopInViewport - containerRect.top) - 16;
-      scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'auto' });
+      const targetScrollTop = scrollContainer.scrollTop + (highlightTopInViewport - containerRect.top) - 60;
+      scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
 
       if (onCurrentPageChange) {
         onCurrentPageChange(pageIndex + 1);
@@ -191,7 +188,7 @@ export function AnswerSheetViewer({
       setTimeout(() => {
         isProgrammaticScrollRef.current = false;
       }, 500);
-    }, 150);
+    });
   }, [selectedAnswer, onCurrentPageChange]);
 
   // Scroll to page when header page buttons change currentPage
@@ -209,7 +206,7 @@ export function AnswerSheetViewer({
     const containerRect = scrollContainer.getBoundingClientRect();
     const pageRect = pageEl.getBoundingClientRect();
     const targetScrollTop = scrollContainer.scrollTop + (pageRect.top - containerRect.top);
-    scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'auto' });
+    scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
 
     setTimeout(() => {
       isProgrammaticScrollRef.current = false;
@@ -283,12 +280,10 @@ export function AnswerSheetViewer({
             width={pageWidth}
             selectedAnswer={selectedAnswer}
             selectedQuestionLabel={selectedQuestionLabel}
-            metadata={pageMetadata[i]}
             pageRef={(el) => { pageRefs.current[i] = el; }}
           />
         ))}
       </Document>
-      <div className="h-[80vh] w-full pointer-events-none" />
     </div>
   );
 }
