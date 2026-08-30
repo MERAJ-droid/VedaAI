@@ -182,7 +182,7 @@ export function AnswerSheetViewer({
       const pageRect = pageEl.getBoundingClientRect();
       const highlightTopInViewport = pageRect.top + region.normalized.y * pageEl.offsetHeight;
       const targetScrollTop = scrollContainer.scrollTop + (highlightTopInViewport - containerRect.top) - 16;
-      scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+      scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'auto' });
 
       if (onCurrentPageChange) {
         onCurrentPageChange(pageIndex + 1);
@@ -209,7 +209,7 @@ export function AnswerSheetViewer({
     const containerRect = scrollContainer.getBoundingClientRect();
     const pageRect = pageEl.getBoundingClientRect();
     const targetScrollTop = scrollContainer.scrollTop + (pageRect.top - containerRect.top);
-    scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+    scrollContainer.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'auto' });
 
     setTimeout(() => {
       isProgrammaticScrollRef.current = false;
