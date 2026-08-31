@@ -3,7 +3,7 @@
 > Upload a question paper and a handwritten answer sheet. Veda AI extracts every question, segments every answer, maps them together, highlights the exact regions on the original scan, and grades each response with AI-generated feedback — all in one click.
 
 **🔗 Live Demo:** `https://vedaai-p7ko.onrender.com`
-**🔗 Demo Video:** `[PLACEHOLDER — ADD DEMO VIDEO LINK HERE]`
+<!-- **🔗 Demo Video:** `[PLACEHOLDER — ADD DEMO VIDEO LINK HERE]` -->
 
 ---
 
