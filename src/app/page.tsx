@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { X, ArrowRight, ArrowLeft, ChevronLeft, Menu } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, ChevronLeft, ChevronDown, Menu } from 'lucide-react';
 import { setAnswerSheetFile } from '@/lib/file-store';
 import { Sidebar } from '@/components/Sidebar';
 
@@ -53,12 +53,12 @@ function FileUploadZone({
 
   return (
     <div
-      className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white transition-all cursor-pointer select-none ${
+      className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white transition-colors cursor-pointer select-none min-h-[112px] px-4 sm:px-6 ${
         file
-          ? 'border-[#FF5623]/50 p-3 sm:p-4'
+          ? 'border-[#FF5623]/50'
           : isDragging
-          ? 'border-[#FF5623] bg-[#FF935026] py-8 sm:py-10 px-4 sm:px-6'
-          : 'border-[#D8D3D3] hover:border-[#FF5623]/50 py-8 sm:py-10 px-4 sm:px-6'
+          ? 'border-[#FF5623] bg-[#FF935026]'
+          : 'border-[#D8D3D3] hover:border-[#FF5623]/50'
       }`}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
@@ -78,8 +78,8 @@ function FileUploadZone({
       />
 
       {file ? (
-        /* ── Uploaded state: matching reference screenshot ── */
-        <div className="w-full flex items-center justify-center">
+        /* ── Uploaded state ── */
+        <div className="w-full flex items-center justify-center py-2">
           <div className="flex items-center gap-3 w-full bg-[#F5F5F5] rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3">
             {/* PDF icon */}
             <div className="shrink-0">
@@ -132,6 +132,24 @@ export default function HomePage() {
   const [progressPercent, setProgressPercent] = useState(10);
   const [error, setError] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showSampleDropdown, setShowSampleDropdown] = useState(false);
+
+  // ── Load demo sample files from /public/assets/demo ───────────────────────
+  const loadSampleFiles = useCallback(async (level: 1 | 2 | 3) => {
+    setShowSampleDropdown(false);
+    try {
+      const [qpRes, asRes] = await Promise.all([
+        fetch(`/assets/demo/level${level}-question-paper.pdf`),
+        fetch(`/assets/demo/level${level}-answer-sheet.pdf`),
+      ]);
+      if (!qpRes.ok || !asRes.ok) throw new Error('Demo files not found');
+      const [qpBlob, asBlob] = await Promise.all([qpRes.blob(), asRes.blob()]);
+      setQuestionPaper(new File([qpBlob], `level${level}-question-paper.pdf`, { type: 'application/pdf' }));
+      setAnswerSheet(new File([asBlob], `level${level}-answer-sheet.pdf`, { type: 'application/pdf' }));
+    } catch {
+      setError(`Could not load Level ${level} sample files. Make sure they exist in /public/assets/demo/.`);
+    }
+  }, []);
 
   // ── Dev preview mode ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -380,8 +398,57 @@ export default function HomePage() {
                   />
                 </div>
 
-                {/* Grey container wrapping upload cards */}
-                <div className="w-full bg-[#F0EDEC] rounded-3xl p-3.5 sm:p-4 shadow-2xs">
+                {/* Grey container wrapping upload cards + sample dropdown */}
+                <div className="w-full bg-[#F0EDEC] rounded-3xl p-3.5 sm:p-4 shadow-2xs relative">
+
+                  {/* ── Sample Test Documents dropdown ── */}
+                  <div className="relative mb-3">
+                    <button
+                      onClick={() => setShowSampleDropdown(v => !v)}
+                      className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 transition-colors w-full cursor-pointer"
+                    >
+                      <span className="flex-1 text-left">Sample Test Documents</span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showSampleDropdown ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {/* Absolute dropdown panel — overlays, never shifts layout */}
+                    {showSampleDropdown && (
+                      <>
+                        {/* Click-away backdrop */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowSampleDropdown(false)}
+                        />
+                        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+                          {([1, 2, 3] as const).map((level) => {
+                            const desc =
+                              level === 1
+                                ? 'Tests the core workflow with clean handwriting and basic mapping edge cases.'
+                                : level === 2
+                                ? 'Tests messy handwriting, sub-questions, MCQs, lists, multi-page answers, and tightly spaced responses.'
+                                : 'Stress-tests mathematical notation, tables, symbols, complex numbering, and challenging spatial layouts.';
+                            return (
+                              <button
+                                key={level}
+                                onClick={() => loadSampleFiles(level)}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#FFF5F2] transition-colors cursor-pointer group border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold text-[#FF5623]">Level {level}</p>
+                                  <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+                                </div>
+                                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-[#FF5623] transition-colors shrink-0" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Upload grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <FileUploadZone
                       sublabel="Question Paper"
@@ -399,7 +466,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Start Mapping button */}
-                <div className="flex flex-col items-center gap-2 mt-1">
+                <div className="flex flex-col items-center gap-2 mt-3">
                   <button
                     onClick={handleSubmit}
                     disabled={!canSubmit}
